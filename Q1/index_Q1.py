@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # -----------------------------
 # Load Image 1
 # -----------------------------
-image_path = "EE7204_Image_Processing_Assessment01/Q1/image1.png"   # Change if needed
+image_path = "Q1/Image_1.jpg"   # Change if needed
 image = cv2.imread(image_path)
 
 if image is None:
@@ -43,5 +43,5 @@ for i, k in enumerate(kernel_sizes):
     plt.axis("off")
 
 plt.tight_layout()
-plt.savefig("EE7204_Image_Processing_Assessment01/Q1/output_Q1.png")
+plt.savefig("Q1/output_Q1.png")
 plt.show()

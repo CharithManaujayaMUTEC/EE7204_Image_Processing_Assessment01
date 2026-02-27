@@ -6,7 +6,7 @@ from skimage.util import random_noise
 # -----------------------------
 # Load Image 2
 # -----------------------------
-image_path = "Q1/image1.png"   # Change if needed
+image_path = "Q2/Image_2.jpg"   # Change if needed
 image = cv2.imread(image_path)
 
 if image is None:
