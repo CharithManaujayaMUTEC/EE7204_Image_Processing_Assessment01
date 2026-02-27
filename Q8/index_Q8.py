@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # -----------------------------
 # Load CT Image
 # -----------------------------
-ct_path = "Q6/Image_6.jpg"  # Change filename if needed
+ct_path = "Q4/Image_4.jpg"  # Change filename if needed
 ct_img = cv2.imread(ct_path)
 
 if ct_img is None:
