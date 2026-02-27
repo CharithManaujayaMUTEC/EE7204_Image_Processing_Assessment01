@@ -10,6 +10,16 @@ THRESHOLD_VALUE = 15
 MIN_AREA = 120
 
 # --------------------------------------------------
+# Create Results Folders
+# --------------------------------------------------
+base_results_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/results"
+train_results_path = os.path.join(base_results_path, "training")
+val_results_path = os.path.join(base_results_path, "validation")
+
+os.makedirs(train_results_path, exist_ok=True)
+os.makedirs(val_results_path, exist_ok=True)
+
+# --------------------------------------------------
 # Segmentation Function
 # --------------------------------------------------
 def segment_vessels(image):
@@ -46,9 +56,9 @@ def segment_vessels(image):
 
 
 # --------------------------------------------------
-# Evaluation Function
+# Evaluation + Saving Function
 # --------------------------------------------------
-def evaluate_dataset(images_path, masks_path):
+def evaluate_and_save(images_path, masks_path, save_path):
 
     image_files = sorted(os.listdir(images_path))
 
@@ -68,6 +78,11 @@ def evaluate_dataset(images_path, masks_path):
 
         segmented = segment_vessels(img)
 
+        # ---- SAVE ONLY FINAL SEGMENTED IMAGE ----
+        save_file_path = os.path.join(save_path, file)
+        cv2.imwrite(save_file_path, segmented)
+
+        # ---- Compute Metrics ----
         seg = segmented > 0
         gt  = gt_mask > 0
 
@@ -84,12 +99,14 @@ def evaluate_dataset(images_path, masks_path):
 
 
 # --------------------------------------------------
-# TRAINING SET EVALUATION (200 Images)
+# TRAINING SET (200 Images)
 # --------------------------------------------------
 training_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/images"
 training_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/masks"
 
-train_dice, train_jaccard = evaluate_dataset(training_images_path, training_masks_path)
+train_dice, train_jaccard = evaluate_and_save(training_images_path,
+                                              training_masks_path,
+                                              train_results_path)
 
 print("----- TRAINING SET RESULTS -----")
 print("Images evaluated:", len(train_dice))
@@ -99,14 +116,16 @@ print()
 
 
 # --------------------------------------------------
-# VALIDATION SET EVALUATION (50 Images)
+# VALIDATION SET (50 Images)
 # --------------------------------------------------
 validation_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/images"
 validation_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/masks"
 
-val_dice, val_jaccard = evaluate_dataset(validation_images_path, validation_masks_path)
+val_dice, val_jaccard = evaluate_and_save(validation_images_path,
+                                          validation_masks_path,
+                                          val_results_path)
 
 print("----- VALIDATION SET RESULTS -----")
 print("Images evaluated:", len(val_dice))
 print("Average Dice:", np.mean(val_dice))
-print("Average Jaccard:", np.mean(val_jaccard)) 
+print("Average Jaccard:", np.mean(val_jaccard))
