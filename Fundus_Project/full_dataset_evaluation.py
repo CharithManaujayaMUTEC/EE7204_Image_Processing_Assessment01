@@ -3,66 +3,68 @@ import numpy as np
 import os
 
 # --------------------------------------------------
-# FIXED PARAMETERS
+# PARAMETERS TO SEARCH
 # --------------------------------------------------
-GAUSSIAN_KERNEL = 41
+GAUSSIAN_KERNELS = [51, 61]
+THRESHOLD_VALUES = [8, 10, 12]
+DILATION_ITERATIONS = [1, 2]
 
-OPEN_KERNEL_SIZES = [3, 5, 7]
-MIN_AREA_VALUES = [80, 120, 160]
-
 # --------------------------------------------------
-# Segmentation Function (Improved Morphological Pipeline)
+# Segmentation Function
 # --------------------------------------------------
-def segment_vessels(image, open_size, min_area):
+def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
 
     green = image[:, :, 1]
 
     # 1️⃣ Illumination correction
-    blur_large = cv2.GaussianBlur(green, (GAUSSIAN_KERNEL, GAUSSIAN_KERNEL), 0)
+    blur_large = cv2.GaussianBlur(green,
+                                  (gaussian_kernel, gaussian_kernel),
+                                  0)
+
     corrected = cv2.subtract(blur_large, green)
 
-    # 2️⃣ Morphological Opening
-    kernel_open = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (open_size, open_size))
-    opened = cv2.morphologyEx(corrected, cv2.MORPH_OPEN, kernel_open)
+    # 2️⃣ Normalize
+    corrected = cv2.normalize(corrected, None, 0, 255, cv2.NORM_MINMAX)
 
-    # 3️⃣ Enhance thin vessels
-    enhanced = cv2.subtract(corrected, opened)
-    enhanced = cv2.normalize(enhanced, None, 0, 255, cv2.NORM_MINMAX)
-
-    # 4️⃣ Circular retina mask
+    # 3️⃣ Circular mask
     h, w = green.shape
     mask_circle = np.zeros((h, w), dtype=np.uint8)
-    cv2.circle(mask_circle, (w//2, h//2), min(h, w)//2 - 10, 255, -1)
-    enhanced = cv2.bitwise_and(enhanced, enhanced, mask=mask_circle)
+    cv2.circle(mask_circle, (w//2, h//2),
+               min(h, w)//2 - 10, 255, -1)
 
-    # 5️⃣ Otsu threshold
-    _, binary = cv2.threshold(enhanced, 0, 255,
-                              cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    corrected = cv2.bitwise_and(corrected,
+                                corrected,
+                                mask=mask_circle)
 
-    # 6️⃣ Closing to reconnect vessels
-    kernel_close = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
-    closed = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel_close)
+    # 4️⃣ Global threshold (LOW)
+    _, binary = cv2.threshold(corrected,
+                              threshold_value,
+                              255,
+                              cv2.THRESH_BINARY)
 
-    # 7️⃣ Remove small components
-    num_labels, labels, stats, _ = cv2.connectedComponentsWithStats(closed, connectivity=8)
+    # 5️⃣ Dilation (recover thin vessels)
+    kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3,3))
+    dilated = cv2.dilate(binary, kernel, iterations=dilation_iter)
 
-    cleaned = np.zeros_like(closed)
+    # 6️⃣ Closing (connect broken parts)
+    closed = cv2.morphologyEx(dilated,
+                              cv2.MORPH_CLOSE,
+                              kernel)
 
-    for i in range(1, num_labels):
-        if stats[i, cv2.CC_STAT_AREA] >= min_area:
-            cleaned[labels == i] = 255
-
-    return cleaned
+    return closed
 
 
 # --------------------------------------------------
-# Evaluation Function
+# Evaluation
 # --------------------------------------------------
-def evaluate_dataset(images_path, masks_path, open_size, min_area):
+def evaluate_dataset(images_path, masks_path,
+                     gaussian_kernel,
+                     threshold_value,
+                     dilation_iter):
 
     image_files = sorted([
         f for f in os.listdir(images_path)
-        if f.lower().endswith(('.png', '.jpg', '.jpeg'))
+        if f.lower().endswith(('.png','.jpg','.jpeg'))
     ])
 
     dice_scores = []
@@ -83,7 +85,10 @@ def evaluate_dataset(images_path, masks_path, open_size, min_area):
         if gt_mask is None:
             continue
 
-        segmented = segment_vessels(img, open_size, min_area)
+        segmented = segment_vessels(img,
+                                    gaussian_kernel,
+                                    threshold_value,
+                                    dilation_iter)
 
         seg = segmented > 0
         gt  = gt_mask > 0
@@ -97,45 +102,53 @@ def evaluate_dataset(images_path, masks_path, open_size, min_area):
 
 
 # --------------------------------------------------
-# TRAINING SET GRID SEARCH
+# GRID SEARCH
 # --------------------------------------------------
 training_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/images"
 training_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/masks"
 
 best_dice = 0
-best_params = (None, None)
+best_params = None
 
-print("Running Morphology Grid Search on Training Set...\n")
+print("Running Final Optimized Search...\n")
 
-for open_size in OPEN_KERNEL_SIZES:
-    for min_area in MIN_AREA_VALUES:
+for gk in GAUSSIAN_KERNELS:
+    for T in THRESHOLD_VALUES:
+        for d in DILATION_ITERATIONS:
 
-        avg_dice = evaluate_dataset(training_images_path,
-                                     training_masks_path,
-                                     open_size,
-                                     min_area)
+            avg_dice = evaluate_dataset(
+                training_images_path,
+                training_masks_path,
+                gk,
+                T,
+                d
+            )
 
-        print(f"OPEN={open_size}, MIN_AREA={min_area} → Dice={avg_dice:.4f}")
+            print(f"Kernel={gk}, T={T}, Dil={d} → Dice={avg_dice:.4f}")
 
-        if avg_dice > best_dice:
-            best_dice = avg_dice
-            best_params = (open_size, min_area)
+            if avg_dice > best_dice:
+                best_dice = avg_dice
+                best_params = (gk, T, d)
 
 print("\nBest Training Parameters:")
-print("OPEN_KERNEL_SIZE:", best_params[0])
-print("MIN_AREA:", best_params[1])
+print("Kernel:", best_params[0])
+print("Threshold:", best_params[1])
+print("Dilation Iter:", best_params[2])
 print("Best Training Dice:", best_dice)
 
 
 # --------------------------------------------------
-# VALIDATION USING BEST PARAMETERS
+# VALIDATION
 # --------------------------------------------------
 validation_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/images"
 validation_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/masks"
 
-val_dice = evaluate_dataset(validation_images_path,
-                            validation_masks_path,
-                            best_params[0],
-                            best_params[1])
+val_dice = evaluate_dataset(
+    validation_images_path,
+    validation_masks_path,
+    best_params[0],
+    best_params[1],
+    best_params[2]
+)
 
-print("\nValidation Dice with Best Parameters:", val_dice)
+print("\nValidation Dice:", val_dice)
