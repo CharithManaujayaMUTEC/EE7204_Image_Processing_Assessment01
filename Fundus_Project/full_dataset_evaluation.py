@@ -2,22 +2,20 @@ import cv2
 import numpy as np
 import os
 
-# --------------------------------------------------
+
 # PARAMETERS TO SEARCH
-# --------------------------------------------------
 GAUSSIAN_KERNELS = [51, 61]
 THRESHOLD_VALUES = [8, 10, 12]
 DILATION_ITERATIONS = [1, 2]
 
-# --------------------------------------------------
+
 # Segmentation Function
-# --------------------------------------------------
 def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
 
-    # 1️⃣ Extract green channel
+    # Extract green channel
     green = image[:, :, 1]
 
-    # 2️⃣ Illumination correction (large Gaussian blur)
+    # Illumination correction (large Gaussian blur)
     blur_large = cv2.GaussianBlur(
         green,
         (gaussian_kernel, gaussian_kernel),
@@ -26,7 +24,7 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
 
     corrected = cv2.subtract(blur_large, green)
 
-    # 3️⃣ Normalize to full intensity range
+    # Normalize to full intensity range
     corrected = cv2.normalize(
         corrected,
         None,
@@ -35,7 +33,7 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
         cv2.NORM_MINMAX
     )
 
-    # 4️⃣ Apply circular mask (remove black borders)
+    # Apply circular mask (remove black borders)
     h, w = green.shape
     mask_circle = np.zeros((h, w), dtype=np.uint8)
     cv2.circle(
@@ -52,7 +50,7 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
         mask=mask_circle
     )
 
-    # 5️⃣ Global threshold
+    # Global threshold
     _, binary = cv2.threshold(
         corrected,
         threshold_value,
@@ -60,7 +58,7 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
         cv2.THRESH_BINARY
     )
 
-    # 6️⃣ Dilation (recover thin vessels)
+    # Dilation (recover thin vessels)
     kernel = cv2.getStructuringElement(
         cv2.MORPH_ELLIPSE,
         (3, 3)
@@ -72,7 +70,7 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
         iterations=dilation_iter
     )
 
-    # 7️⃣ Closing (connect broken vessels)
+    # Closing (connect broken vessels)
     closed = cv2.morphologyEx(
         dilated,
         cv2.MORPH_CLOSE,
@@ -82,9 +80,9 @@ def segment_vessels(image, gaussian_kernel, threshold_value, dilation_iter):
     return closed
 
 
-# --------------------------------------------------
+
 # Evaluation Function (Dice + Jaccard)
-# --------------------------------------------------
+
 def evaluate_dataset(images_path,
                      masks_path,
                      gaussian_kernel,
@@ -144,9 +142,9 @@ def evaluate_dataset(images_path,
     return np.mean(dice_scores), np.mean(jaccard_scores)
 
 
-# --------------------------------------------------
+
 # GRID SEARCH ON TRAINING SET
-# --------------------------------------------------
+
 training_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/images"
 training_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/training_set/masks"
 
@@ -186,9 +184,9 @@ print("Best Training Dice:", best_dice)
 print("Best Training Jaccard:", best_jaccard)
 
 
-# --------------------------------------------------
+
 # VALIDATION SET EVALUATION
-# --------------------------------------------------
+
 validation_images_path = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/images"
 validation_masks_path  = "/content/EE7204_Image_Processing_Assessment01/Fundus_Project/validation_set/masks"
 
