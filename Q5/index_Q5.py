@@ -2,41 +2,44 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# -----------------------------
-# Load Image 5
-# -----------------------------
-image_path = "Q5/Image_5.jpg"   # Change filename if needed
+# ----------------------------------
+# Load Image 1 (Same as Q1)
+# ----------------------------------
+image_path = "Q1/Image_1.jpg"
 image = cv2.imread(image_path)
 
 if image is None:
-    raise FileNotFoundError("Image not found. Check filename.")
+    raise FileNotFoundError("Image not found.")
 
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# -----------------------------
-# Sobel Edge Detection
-# -----------------------------
-sobel_x = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
-sobel_y = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+# ----------------------------------
+# Parameters
+# ----------------------------------
+kernel_size = 15
+pad = kernel_size // 2
 
-sobel_magnitude = cv2.magnitude(sobel_x, sobel_y)
-sobel_magnitude = cv2.convertScaleAbs(sobel_magnitude)
+# ----------------------------------
+# Manual Average Filtering (A)
+# ----------------------------------
+kernel = np.ones((kernel_size, kernel_size), np.float32) / (kernel_size * kernel_size)
 
-# -----------------------------
-# Laplacian Edge Detection
-# -----------------------------
-laplacian = cv2.Laplacian(gray, cv2.CV_64F)
-laplacian = cv2.convertScaleAbs(laplacian)
+# Use convolution manually
+manual_filtered = cv2.filter2D(image_rgb, -1, kernel)
 
-# -----------------------------
-# Canny Edge Detection
-# -----------------------------
-canny = cv2.Canny(gray, 100, 200)
+# ----------------------------------
+# Built-in OpenCV Average Filtering (B)
+# ----------------------------------
+builtin_filtered = cv2.blur(image_rgb, (kernel_size, kernel_size))
 
-# -----------------------------
+# ----------------------------------
+# Difference (A - B)
+# ----------------------------------
+difference = cv2.absdiff(manual_filtered, builtin_filtered)
+
+# ----------------------------------
 # Display Results
-# -----------------------------
+# ----------------------------------
 plt.figure(figsize=(15,5))
 
 plt.subplot(1,4,1)
@@ -45,20 +48,20 @@ plt.title("Original")
 plt.axis("off")
 
 plt.subplot(1,4,2)
-plt.imshow(sobel_magnitude, cmap='gray')
-plt.title("Sobel")
+plt.imshow(manual_filtered)
+plt.title("Manual (A)")
 plt.axis("off")
 
 plt.subplot(1,4,3)
-plt.imshow(laplacian, cmap='gray')
-plt.title("Laplacian")
+plt.imshow(builtin_filtered)
+plt.title("Built-in (B)")
 plt.axis("off")
 
 plt.subplot(1,4,4)
-plt.imshow(canny, cmap='gray')
-plt.title("Canny")
+plt.imshow(difference)
+plt.title("Difference (A-B)")
 plt.axis("off")
 
 plt.tight_layout()
-plt.savefig("Q5/edge_detection.png")
+plt.savefig("Q5/output_Q5.png")
 plt.show()
