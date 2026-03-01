@@ -2,10 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# -----------------------------
 # Load Image 1
-# -----------------------------
-image_path = "Q1/Image_1.jpg"   # Change if needed
+image_path = "Q1/Image_1.jpg" 
 image = cv2.imread(image_path)
 
 if image is None:
@@ -14,9 +12,7 @@ if image is None:
 # Convert BGR to RGB
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-# -----------------------------
 # Apply Average Filtering
-# -----------------------------
 kernel_sizes = [3, 5, 11, 15]
 filtered_images = []
 
@@ -24,9 +20,7 @@ for k in kernel_sizes:
     blurred = cv2.blur(image_rgb, (k, k))
     filtered_images.append(blurred)
 
-# -----------------------------
 # Display Results
-# -----------------------------
 plt.figure(figsize=(15, 6))
 
 # Original Image

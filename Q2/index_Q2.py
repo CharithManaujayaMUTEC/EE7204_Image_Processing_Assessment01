@@ -3,10 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from skimage.util import random_noise
 
-# -----------------------------
 # Load Image 2
-# -----------------------------
-image_path = "Q2/Image_2.jpg"   # Change if needed
+image_path = "Q2/Image_2.jpg" 
 image = cv2.imread(image_path)
 
 if image is None:
@@ -14,9 +12,7 @@ if image is None:
 
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-# -----------------------------
 # Add Salt & Pepper Noise
-# -----------------------------
 noise_10 = random_noise(image_rgb, mode='s&p', amount=0.10)
 noise_20 = random_noise(image_rgb, mode='s&p', amount=0.20)
 
@@ -24,9 +20,7 @@ noise_20 = random_noise(image_rgb, mode='s&p', amount=0.20)
 noise_10 = (noise_10 * 255).astype(np.uint8)
 noise_20 = (noise_20 * 255).astype(np.uint8)
 
-# -----------------------------
 # Display Original and Noisy Images
-# -----------------------------
 plt.figure(figsize=(12,4))
 
 plt.subplot(1,3,1)
@@ -48,9 +42,7 @@ plt.tight_layout()
 plt.savefig("Q2/output_noise.png")
 plt.show()
 
-# -----------------------------
 # Apply Median Filtering
-# -----------------------------
 kernel_sizes = [3, 5, 11]
 
 # For 10% Noise

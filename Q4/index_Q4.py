@@ -2,10 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# -----------------------------
 # Load Image 4
-# -----------------------------
-image_path = "Q4/Image_4.jpg"   # Change if needed
+image_path = "Q4/Image_4.jpg"
 image = cv2.imread(image_path)
 
 if image is None:
@@ -13,9 +11,7 @@ if image is None:
 
 image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-# -----------------------------
 # Build Gaussian Pyramid
-# -----------------------------
 gaussian_pyramid = [image]
 levels = 5
 
@@ -35,9 +31,7 @@ plt.tight_layout()
 plt.savefig("Q4/gaussian_pyramid.png")
 plt.show()
 
-# -----------------------------
 # Build Laplacian Pyramid
-# -----------------------------
 laplacian_pyramid = []
 
 for i in range(levels, 0, -1):

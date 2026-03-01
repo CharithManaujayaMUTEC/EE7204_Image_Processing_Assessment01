@@ -4,10 +4,8 @@ import matplotlib.pyplot as plt
 import pywt
 from skimage.util import random_noise
 
-# -----------------------------
 # Load Image 3
-# -----------------------------
-image_path = "Q6/Image_6.jpg"  # Change filename if needed
+image_path = "Q6/Image_6.jpg" 
 image = cv2.imread(image_path)
 
 if image is None:
@@ -16,32 +14,24 @@ if image is None:
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# -----------------------------
 # Add Salt & Pepper Noise
-# -----------------------------
 sp_noise = random_noise(gray, mode='s&p', amount=0.1)
 sp_noise = (sp_noise * 255).astype(np.uint8)
 
-# -----------------------------
 # Laplacian Filter
-# -----------------------------
 laplacian = cv2.Laplacian(gray, cv2.CV_64F)
 laplacian = cv2.convertScaleAbs(laplacian)
 
-# -----------------------------
 # Combine I + SP + L(I)
-# -----------------------------
 combined = cv2.add(gray, sp_noise)
 combined = cv2.add(combined, laplacian)
 
-# -----------------------------
 # Wavelet Decomposition
-# -----------------------------
 # Use Haar
 coeffs2 = pywt.dwt2(combined, 'haar')
 cA, (cH, cV, cD) = coeffs2
 
-# Remove high-frequency components (set details to zero)
+# Remove high-frequency components
 cH.fill(0)
 cV.fill(0)
 cD.fill(0)
@@ -50,9 +40,7 @@ cD.fill(0)
 reconstructed = pywt.idwt2((cA, (cH, cV, cD)), 'haar')
 reconstructed = np.clip(reconstructed, 0, 255).astype(np.uint8)
 
-# -----------------------------
 # Display Results
-# -----------------------------
 plt.figure(figsize=(12,4))
 
 plt.subplot(1,4,1)

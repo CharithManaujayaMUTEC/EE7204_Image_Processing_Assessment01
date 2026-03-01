@@ -2,10 +2,8 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-# -----------------------------
 # Load Image 3
-# -----------------------------
-image_path = "Q3/Image_3.jpg"   # Change if needed
+image_path = "Q3/Image_3.jpg"
 image = cv2.imread(image_path)
 
 if image is None:
@@ -13,9 +11,7 @@ if image is None:
 
 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-# -----------------------------
 # PART 1: Gaussian Filtering with Different Kernel Sizes
-# -----------------------------
 kernel_sizes = [3, 5, 11, 15]
 filtered_images = []
 
@@ -40,9 +36,7 @@ plt.tight_layout()
 plt.savefig("Q3/output_kernel.png")
 plt.show()
 
-# -----------------------------
 # PART 2: Effect of Sigma
-# -----------------------------
 sigma_values = [1, 5, 10]
 kernel_size = 11
 
